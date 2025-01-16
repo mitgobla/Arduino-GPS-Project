@@ -1,0 +1,9 @@
+{
+    "wifiSSID": "",
+    "wifiPassword": "",
+    "mqttServer": "",
+    "mqttPort": 1883,
+    "mqttClient": "esp32-dev",
+    "mqttUsername": "",
+    "mqttPassword": ""
+}

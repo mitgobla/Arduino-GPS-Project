@@ -7,7 +7,7 @@ Config::Config()
 /// @brief Load the config.json from the SD card
 /// @param filename Path to the config file. Default "config.json"
 /// @return Boolean on if the config was loaded successfully
-bool Config::load(const char *filename = "config.json")
+bool Config::load(const char *filename /*= "/config.json"*/)
 {
     // Open config file
     File configFile = SD.open(filename, FILE_READ);
@@ -23,17 +23,20 @@ bool Config::load(const char *filename = "config.json")
 
     if (error) {
         Serial.println("Failed to parse config file.");
+        Serial.println(error.c_str());
         return false;
     }
 
     // Assign variables
-    wifiSSID = configJson["wifiSSID"] | "";
-    wifiPassword = configJson["wifiPassword"] | "";
-    mqttServer = configJson["mqttServer"] | "";
+    strlcpy(wifiSSID, configJson["wifiSSID"] | "", sizeof(wifiSSID));
+    strlcpy(wifiPassword, configJson["wifiPassword"] | "", sizeof(wifiPassword));
+    strlcpy(mqttServer, configJson["mqttServer"] | "", sizeof(mqttServer));
     mqttPort = configJson["mqttPort"] | 1883;
-    mqttClient = configJson["mqttClient"] | "esp32-dev";
-    mqttUsername = configJson["mqttUsername"] | "";
-    mqttPassword = configJson["mqttPassword"] | "";
+    strlcpy(mqttClientName, configJson["mqttClientName"] | "esp32-dev", sizeof(mqttClientName));
+    strlcpy(mqttUsername, configJson["mqttUsername"] | "", sizeof(mqttUsername));
+    strlcpy(mqttPassword, configJson["mqttPassword"] | "", sizeof(mqttPassword));
+    strlcpy(mqttTopic, configJson["mqttTopic"] | "", sizeof(mqttTopic));
+    publishInterval = configJson["publishInterval"] | 5000;
 
     Serial.println("Config loaded successfully.");
     return true;
@@ -59,9 +62,9 @@ unsigned int Config::getMQTTPort() const
     return mqttPort;
 }
 
-const char *Config::getMQTTClient() const
+const char *Config::getMQTTClientName() const
 {
-    return mqttClient;
+    return mqttClientName;
 }
 
 const char *Config::getMQTTUsername() const
@@ -72,4 +75,14 @@ const char *Config::getMQTTUsername() const
 const char *Config::getMQTTPassword() const
 {
     return mqttPassword;
+}
+
+const char *Config::getMQTTTopic() const
+{
+    return mqttTopic;
+}
+
+unsigned int Config::getPublishInterval() const
+{
+    return publishInterval;
 }

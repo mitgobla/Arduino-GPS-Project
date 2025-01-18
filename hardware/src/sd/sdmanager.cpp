@@ -16,7 +16,7 @@ bool SDManager::begin()
 /// @param data The string data to append
 void SDManager::save(const char *data)
 {
-    File file = SD.open("data.txt", FILE_APPEND);
+    File file = SD.open("/data.txt", FILE_APPEND, true);
     if (file) {
         file.println(data);
         file.close();
@@ -29,7 +29,7 @@ void SDManager::save(const char *data)
 /// @param callback Function to receive each stored line.
 void SDManager::processLines(std::function<void(const char*)> callback)
 {
-    File file = SD.open("data.txt", FILE_READ);
+    File file = SD.open("/data.txt", FILE_READ);
     if (file) {
         Serial.println("Reading stored data...");
         while (file.available()) {
@@ -39,7 +39,7 @@ void SDManager::processLines(std::function<void(const char*)> callback)
             callback(buffer);
         }
         file.close();
-        SD.remove("data.txt");
+        SD.remove("/data.txt");
         Serial.println("Stored data cleared.");
     }
 }

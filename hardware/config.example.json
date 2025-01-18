@@ -3,7 +3,9 @@
     "wifiPassword": "",
     "mqttServer": "",
     "mqttPort": 1883,
-    "mqttClient": "esp32-dev",
+    "mqttClientName": "esp32-dev",
     "mqttUsername": "",
-    "mqttPassword": ""
+    "mqttPassword": "",
+    "mqttTopic": "device/0/data",
+    "publishInterval": 5000
 }

@@ -1,113 +1,38 @@
+<!doctype html>
+<html lang="en">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leaflet Map</title>
+<title>Arduino GPS Project</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<style>
-    #map { height: 100%; width: 50%; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-    <div id="map"></div>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        // Initialize the map, centered on Bristol, United Kingdom
-        const map = L.map('map').setView([51.4545, -2.5879], 16);
+    <div class="split">
+        <div id="map"></div>
+        <div id="sidebar" class="p-3">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Arduino GPS Project</h4>
+                    <p class="card-text">An ESP32 project with a NEO-6M GPS module, a DHT22 temperature and humidity sensor, bundled into a portable box for remote data logging.</p>
+                    <div>
+                        <label for="start-date">Start Date:</label>
+                        <input type="text" id="start-date" class="form-control">
+                        <label for="end-date">End Date:</label>
+                        <input type="text" id="end-date" class="form-control">
+                        <button id="apply-date-range" class="btn btn-primary mt-2">Apply</button>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item" id="data-count">Data count: 0</li>
+                </ul>
+            </div>
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Layers for temperature and humidity
-        let temperatureLayer = L.layerGroup();
-
-        let humidityLayer = L.layerGroup();
-
-        const getColor = (value, type) => {
-            if (type === 'temperature') {
-                // Gradient for temperature
-                return value > 30 ? '#ff0000' :
-                       value > 20 ? '#ff7800' :
-                       value > 10 ? '#ffff00' :
-                       value > 0  ? '#00ff00' :
-                                    '#0000ff';
-            } else if (type === 'humidity') {
-                // Gradient for humidity
-                return value > 80 ? '#0179c0' :
-                       value > 60 ? '#2d9788' :
-                       value > 40 ? '#7bbe40' :
-                       value > 20 ? '#b9c632' :
-                                    '#fecf22';
-            }
-        };
-
-        const fetchAndUpdateData = () => {
-            const bounds = map.getBounds();
-
-            fetch(`/api/device-data?min_lng=${bounds.getWest()}&min_lat=${bounds.getSouth()}&max_lng=${bounds.getEast()}&max_lat=${bounds.getNorth()}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Clear existing layers
-                    temperatureLayer.clearLayers();
-                    humidityLayer.clearLayers();
-
-                    // Create temperature layer
-                    L.geoJSON(data, {
-                        pointToLayer: (feature, latlng) => {
-                            return L.circleMarker(latlng, {
-                                radius: 8,
-                                fillColor: getColor(feature.properties.temperature, 'temperature'),
-                                color: "#000",
-                                weight: 1,
-                                opacity: 1,
-                                fillOpacity: 0.8
-                            }).bindPopup(`
-                                <strong>Device:</strong> ${feature.properties.device}<br>
-                                <strong>Temperature:</strong> ${feature.properties.temperature}°C<br>
-                                <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
-                                <strong>Altitude:</strong> ${feature.properties.altitude}m<br>
-                                <strong>Recorded:</strong> ${feature.properties.recorded}
-                            `);
-                        }
-                    }).addTo(temperatureLayer);
-
-                    // Create humidity layer
-                    L.geoJSON(data, {
-                        pointToLayer: (feature, latlng) => {
-                            return L.circleMarker(latlng, {
-                                radius: 8,
-                                fillColor: getColor(feature.properties.humidity, 'humidity'),
-                                color: "#000",
-                                weight: 1,
-                                opacity: 1,
-                                fillOpacity: 0.8
-                            }).bindPopup(`
-                                <strong>Device:</strong> ${feature.properties.device}<br>
-                                <strong>Temperature:</strong> ${feature.properties.temperature}°C<br>
-                                <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
-                                <strong>Altitude:</strong> ${feature.properties.altitude}m<br>
-                                <strong>Recorded:</strong> ${feature.properties.recorded}
-                            `);
-                        }
-                    }).addTo(humidityLayer);
-                });
-        };
-
-        // Fetch data initially and whenever the map is moved
-        map.on('moveend', fetchAndUpdateData);
-        fetchAndUpdateData();
-
-        // Add layer control
-        const baseLayers = {
-            "Temperature": temperatureLayer,
-            "Humidity": humidityLayer
-        };
-        const overlays = {
-
-        };
-        L.control.layers(baseLayers, overlays).addTo(map);
-        // enable temperature layer by default
-        temperatureLayer.addTo(map);
-    </script>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/bundle.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/holder/2.9.8/holder.min.js" integrity="sha512-O6R6IBONpEcZVYJAmSC+20vdsM07uFuGjFf0n/Zthm8sOFW+lAq/OK1WOL8vk93GBDxtMIy6ocbj6lduyeLuqQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
+</html>

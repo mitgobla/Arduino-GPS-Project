@@ -6,7 +6,7 @@
         {
             "label": "Run Flask",
             "type": "shell",
-            "command": "flask --app src/app.py run --debug",
+            "command": "source ./.venv/bin/activate && flask --app src/app.py run --debug",
             "problemMatcher": []
         }
     ]

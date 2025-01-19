@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
 import json
-# from datetime import datetime
+from dateutil.parser import isoparse
 
 app = Flask(__name__)
 app.config.from_object("src.config.Config")
@@ -23,6 +23,26 @@ class DeviceData(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 
+@app.route("/api/value-ranges", methods=["GET"])
+def get_value_ranges():
+    ranges: list| None = db.session.query(
+        db.func.min(DeviceData.temperature),
+        db.func.max(DeviceData.temperature),
+        db.func.min(DeviceData.humidity),
+        db.func.max(DeviceData.humidity),
+        db.func.min(DeviceData.recorded),
+        db.func.max(DeviceData.recorded),
+    ).first()
+    if not ranges:
+        return jsonify({"error": "No data available"}), 404
+
+    out = {
+        "temperature": [ranges[0], ranges[1]],
+        "humidity": [ranges[2], ranges[3]],
+        "date": [ranges[4].isoformat(), ranges[5].isoformat()],
+    }
+    return jsonify(out)
+
 @app.route("/api/device-data", methods=["GET"])
 def get_device_data():
     # Leaflet map bounds
@@ -32,28 +52,37 @@ def get_device_data():
     max_lat = request.args.get("max_lat", type=float)
     min_lng = request.args.get("min_lng", type=float)
     max_lng = request.args.get("max_lng", type=float)
-    # Leaflet map timeline plugin
-    #start_date = request.args.get("start_date", type=str)
-    #end_date = request.args.get("end_date", type=str)
+
+    start_date = request.args.get("start_date", type=str)
+    end_date = request.args.get("end_date", type=str)
 
     if not min_lat or not max_lat or not min_lng or not max_lng:
         return jsonify({"error": "Missing map bounds"}), 400
 
-    # if not start_date or not end_date:
-    #     return jsonify({"error": "Missing date range"}), 400
-
-    # try:
-    #     start_date = datetime.fromisoformat(start_date)
-    #     end_date = datetime.fromisoformat(end_date)
-    # except ValueError:
-    #     return jsonify({"error": "Invalid date format"}), 400
+    if start_date and end_date:
+        print(start_date)
+        print(end_date)
+        try:
+            start_date = isoparse(start_date)
+            end_date = isoparse(end_date)
+        except ValueError:
+            return jsonify({"error": "Invalid date format"}), 400
+    else:
+        # query min and max date
+        dates = db.session.query(
+            db.func.min(DeviceData.recorded),
+            db.func.max(DeviceData.recorded)
+        ).first()
+        if not dates:
+            return jsonify({"error": "No date data available"}), 404
+        start_date, end_date = dates
 
     device_data = DeviceData.query.filter(
         db.func.ST_Within(
             DeviceData.location,
             db.func.ST_MakeEnvelope(min_lng, min_lat, max_lng, max_lat, 4326),
         ),
-        #DeviceData.recorded.between(start_date, end_date),
+        DeviceData.recorded.between(start_date, end_date),
     )
 
     # Convert to GeoJSON for Leaflet map

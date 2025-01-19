@@ -1,0 +1,113 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaflet Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+    #map { height: 100%; width: 50%; }
+</style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map, centered on Bristol, United Kingdom
+        const map = L.map('map').setView([51.4545, -2.5879], 16);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Layers for temperature and humidity
+        let temperatureLayer = L.layerGroup();
+
+        let humidityLayer = L.layerGroup();
+
+        const getColor = (value, type) => {
+            if (type === 'temperature') {
+                // Gradient for temperature
+                return value > 30 ? '#ff0000' :
+                       value > 20 ? '#ff7800' :
+                       value > 10 ? '#ffff00' :
+                       value > 0  ? '#00ff00' :
+                                    '#0000ff';
+            } else if (type === 'humidity') {
+                // Gradient for humidity
+                return value > 80 ? '#0179c0' :
+                       value > 60 ? '#2d9788' :
+                       value > 40 ? '#7bbe40' :
+                       value > 20 ? '#b9c632' :
+                                    '#fecf22';
+            }
+        };
+
+        const fetchAndUpdateData = () => {
+            const bounds = map.getBounds();
+
+            fetch(`/api/device-data?min_lng=${bounds.getWest()}&min_lat=${bounds.getSouth()}&max_lng=${bounds.getEast()}&max_lat=${bounds.getNorth()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing layers
+                    temperatureLayer.clearLayers();
+                    humidityLayer.clearLayers();
+
+                    // Create temperature layer
+                    L.geoJSON(data, {
+                        pointToLayer: (feature, latlng) => {
+                            return L.circleMarker(latlng, {
+                                radius: 8,
+                                fillColor: getColor(feature.properties.temperature, 'temperature'),
+                                color: "#000",
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).bindPopup(`
+                                <strong>Device:</strong> ${feature.properties.device}<br>
+                                <strong>Temperature:</strong> ${feature.properties.temperature}°C<br>
+                                <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
+                                <strong>Altitude:</strong> ${feature.properties.altitude}m<br>
+                                <strong>Recorded:</strong> ${feature.properties.recorded}
+                            `);
+                        }
+                    }).addTo(temperatureLayer);
+
+                    // Create humidity layer
+                    L.geoJSON(data, {
+                        pointToLayer: (feature, latlng) => {
+                            return L.circleMarker(latlng, {
+                                radius: 8,
+                                fillColor: getColor(feature.properties.humidity, 'humidity'),
+                                color: "#000",
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).bindPopup(`
+                                <strong>Device:</strong> ${feature.properties.device}<br>
+                                <strong>Temperature:</strong> ${feature.properties.temperature}°C<br>
+                                <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
+                                <strong>Altitude:</strong> ${feature.properties.altitude}m<br>
+                                <strong>Recorded:</strong> ${feature.properties.recorded}
+                            `);
+                        }
+                    }).addTo(humidityLayer);
+                });
+        };
+
+        // Fetch data initially and whenever the map is moved
+        map.on('moveend', fetchAndUpdateData);
+        fetchAndUpdateData();
+
+        // Add layer control
+        const baseLayers = {
+            "Temperature": temperatureLayer,
+            "Humidity": humidityLayer
+        };
+        const overlays = {
+
+        };
+        L.control.layers(baseLayers, overlays).addTo(map);
+        // enable temperature layer by default
+        temperatureLayer.addTo(map);
+    </script>
+</body>

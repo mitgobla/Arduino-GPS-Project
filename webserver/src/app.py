@@ -1,7 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
 import json
+# from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object("src.config.Config")
@@ -22,7 +23,59 @@ class DeviceData(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 
+@app.route("/api/device-data", methods=["GET"])
+def get_device_data():
+    # Leaflet map bounds
+    print(request.args)
+    print(request.args.get("min_lat", type=float))
+    min_lat = request.args.get("min_lat", type=float)
+    max_lat = request.args.get("max_lat", type=float)
+    min_lng = request.args.get("min_lng", type=float)
+    max_lng = request.args.get("max_lng", type=float)
+    # Leaflet map timeline plugin
+    #start_date = request.args.get("start_date", type=str)
+    #end_date = request.args.get("end_date", type=str)
+
+    if not min_lat or not max_lat or not min_lng or not max_lng:
+        return jsonify({"error": "Missing map bounds"}), 400
+
+    # if not start_date or not end_date:
+    #     return jsonify({"error": "Missing date range"}), 400
+
+    # try:
+    #     start_date = datetime.fromisoformat(start_date)
+    #     end_date = datetime.fromisoformat(end_date)
+    # except ValueError:
+    #     return jsonify({"error": "Invalid date format"}), 400
+
+    device_data = DeviceData.query.filter(
+        db.func.ST_Within(
+            DeviceData.location,
+            db.func.ST_MakeEnvelope(min_lng, min_lat, max_lng, max_lat, 4326),
+        ),
+        #DeviceData.recorded.between(start_date, end_date),
+    )
+
+    # Convert to GeoJSON for Leaflet map
+    features = []
+    for data in device_data:
+        feature = {
+            "type": "Feature",
+            "geometry": json.loads(db.session.scalar(db.func.ST_AsGeoJSON(data.location, 6))),
+            "properties": {
+                "id": data.id,
+                "recorded": data.recorded.isoformat(),
+                "altitude": data.altitude,
+                "temperature": data.temperature,
+                "humidity": data.humidity,
+                "device": data.device,
+            },
+        }
+        features.append(feature)
+
+    return jsonify({"type": "FeatureCollection", "features": features})
+
+
 @app.route("/")
 def index():
-    query = DeviceData.query.count()
-    return f"Hello World! There are {query} records in the database."
+    return render_template("index.html")

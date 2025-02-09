@@ -100,13 +100,13 @@ def get_device_data():
         start_date, end_date = dates
 
     # Query device data within the given map bounds and date range
-    device_data = db.Query(DeviceData).filter(
+    device_data = db.session.query(DeviceData).filter(
         func.ST_Within(
             DeviceData.location,
             func.ST_MakeEnvelope(min_lng, min_lat, max_lng, max_lat, 4326),
         ),
         DeviceData.recorded.between(start_date, end_date),
-    )
+    ).all()
 
     # Convert to GeoJSON for Leaflet map
     features = []
@@ -116,7 +116,7 @@ def get_device_data():
             "geometry": json.loads(db.session.scalar(func.ST_AsGeoJSON(data.location, 6))),
             "properties": {
                 "id": data.id,
-                "recorded": data.recorded.isoformat(),
+                "recorded": data.recorded.isoformat() if data.recorded is not None else None,
                 "altitude": data.altitude,
                 "temperature": data.temperature,
                 "humidity": data.humidity,

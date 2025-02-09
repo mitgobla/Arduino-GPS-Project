@@ -39,30 +39,42 @@ getValueRanges().then(ranges => {
     valueRanges = ranges;
     startDate = ranges.date[0];
     endDate = ranges.date[1];
-    console.log(ranges);
-    console.log(startDate);
-    console.log(endDate);
+
+    const offsetStartDate = new Date(new Date(startDate).getTime() - 60000);
+    const offsetEndDate = new Date(new Date(endDate).getTime() + 60000);
 
     // Initialize flatpickr for start-date
-    flatpickr("#start-date", {
+    const startPicker = flatpickr("#start-date", {
         defaultDate: startDate,
         animate: true,
         enableTime: true,
         dateFormat: "Y-m-d H:i",
+        minDate: offsetStartDate,
+        maxDate: offsetEndDate,
         onChange: function(selectedDates, dateStr, instance) {
             startDate = selectedDates[0].toISOString();
         }
     });
 
     // Initialize flatpickr for end-date
-    flatpickr("#end-date", {
+    const endPicker = flatpickr("#end-date", {
         defaultDate: endDate,
         animate: true,
         enableTime: true,
         dateFormat: "Y-m-d H:i",
+        minDate: offsetStartDate,
+        maxDate: offsetEndDate,
         onChange: function(selectedDates, dateStr, instance) {
             endDate = selectedDates[0].toISOString();
         }
+    });
+
+    document.getElementById('reset-date-range')!.addEventListener('click', () => {
+        startDate = ranges.date[0];
+        endDate = ranges.date[1];
+        (startPicker as flatpickr.Instance).setDate(startDate);
+        (endPicker as flatpickr.Instance).setDate(endDate);
+        fetchAndUpdateData();
     });
 });
 

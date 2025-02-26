@@ -50,6 +50,7 @@ void publishData(const char* data);
 /// @brief Process stored data on SD card
 void processSDCardData();
 
+/// @brief Check if GPS data is available
 bool hasGPS();
 
 void setup() {
@@ -158,6 +159,9 @@ void loop() {
 
 bool connectToWiFi()
 {
+    // Make 10 attempts to connect to WiFi
+    // Output the status for debugging
+    // Wait 1 second between each attempt
     unsigned int attempts = 0;
     if (WiFi.status() != WL_CONNECTED) {
         Serial.print("[WiFi] Connecting to WiFi... ");
@@ -212,6 +216,7 @@ bool connectToMQTT()
 
 void publishData(const char *data)
 {
+    // Only publish if connected to WiFi and MQTT, attempt first
     if (connectToWiFi() && connectToMQTT()) {
         Serial.print("[MQTT] Publishing data...");
         Serial.println(data);

@@ -12,7 +12,7 @@ bool Config::load(const char *filename /*= "/config.json"*/)
     // Open config file
     File configFile = SD.open(filename, FILE_READ);
     if (!configFile) {
-        Serial.println("Failed to open config file.");
+        Serial.println("[Config] Failed to open config file.");
         return false;
     }
 
@@ -22,7 +22,7 @@ bool Config::load(const char *filename /*= "/config.json"*/)
     configFile.close();
 
     if (error) {
-        Serial.println("Failed to parse config file.");
+        Serial.println("[Config] Failed to parse config file.");
         Serial.println(error.c_str());
         return false;
     }
@@ -38,7 +38,7 @@ bool Config::load(const char *filename /*= "/config.json"*/)
     strlcpy(mqttTopic, configJson["mqttTopic"] | "", sizeof(mqttTopic));
     publishInterval = configJson["publishInterval"] | 5000;
 
-    Serial.println("Config loaded successfully.");
+    Serial.println("[Config] Config loaded successfully.");
     return true;
 }
 

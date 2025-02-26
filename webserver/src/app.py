@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request, render_template
+from typing import Literal
+from flask import Flask, Response, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Float, DateTime, String, func
@@ -37,7 +38,7 @@ class DeviceData(Base):
 
 
 @app.route("/api/value-ranges", methods=["GET"])
-def get_value_ranges():
+def get_value_ranges() -> tuple[Response, Literal[404]] | Response:
     """Get the minimum and maximum values for temperature, humidity, and date.
 
     Returns:
@@ -62,7 +63,7 @@ def get_value_ranges():
     return jsonify(out)
 
 @app.route("/api/device-data", methods=["GET"])
-def get_device_data():
+def get_device_data() -> tuple[Response, Literal[400]] | tuple[Response, Literal[404]] | Response:
     """Get device data within a given map bounds and date range.
 
     Returns:
@@ -129,7 +130,7 @@ def get_device_data():
 
 
 @app.route("/")
-def index():
+def index() -> str:
     """Home page.
 
     Returns:

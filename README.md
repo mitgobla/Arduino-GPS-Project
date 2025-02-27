@@ -22,13 +22,25 @@ This project is an ESP32-based GPS and sensor tracking system that logs location
 
 A project for me to learn a geospatial stack and build a full-stack application from scratch, bringing in my love for microcontrollers and IoT.
 
+## Further information
+
+- [Hardware](hardware/README.md): Details on the hardware components and how they are set up.
+- [Webserver](webserver/README.md): Installation instructions for the webserver.
+
 ## Photos
 
 |![Hardware](hardware/docs/project_in_box.png)|
 |:--:|
 | *The project in its box, DHT22 sensor on a long wire* |
 
-
 |![Webserver](webserver/docs/webpage.png)|
 |:--:|
 | *The Flask webserver displaying the map and data* |
+
+|![Collecting data](docs/collecting_data.png)|
+|:--:|
+| *Out in the field collecting data and checking it is functioning correctly* |
+
+|![Collecting data 2](docs/collecting_data_2.png)|
+|:--:|
+| *Collecting data in my car, connected to laptop for debugging* |
